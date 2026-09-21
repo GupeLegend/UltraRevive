@@ -138,6 +138,11 @@ it.
 
 Code comments and config files are written in Spanish.
 
-## License
+## License & credits
 
-MIT — see [LICENSE](LICENSE). Use it, change it, ship it; just keep the copyright notice.
+UltraRevive is open source under the [MIT License](LICENSE).
+
+You are free to use, modify and redistribute it, as long as you keep the
+copyright notice and license text. If you publish a fork or a derivative,
+a mention like "Based on UltraRevive by Social Studio" with a link to this
+repository is very much appreciated.
