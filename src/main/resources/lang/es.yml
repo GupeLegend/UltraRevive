@@ -1,0 +1,111 @@
+# Espanol. Codigos de color con & .
+# Placeholders: {time} {percent} {target} {player} {name} {n} {secs} {count} {items}
+
+prefix: "&8[&6Ultra&cRevive&8] &r"
+
+downed-title: "&c&l☠ ESTAS DERRIBADO"
+downed-subtitle: "&7Resiste... un companero puede levantarte"
+downed-bossbar: "&c&l☠ DERRIBADO &7- &c{time}s"
+downed-actionbar: "&cTe estas desangrando... &c&l{time}s &7| Un aliado debe acercarse y agacharse"
+being-revived-actionbar: "&aTe estan reviviendo... &e&l{percent}%"
+
+reviver-actionbar: "&aReanimando a &e{target}&a... &e&l{percent}%"
+reviver-too-hungry: "&7Tienes demasiada hambre para revivir."
+reviver-success: "&a¡Reanimaste a &e{target}&a!"
+revive-interrupted: "&c&l✖ &cTe golpearon: se interrumpio la reanimacion."
+
+revive-paused: "&e&l⏸ Reanimacion en pausa &7({percent}%) &8- &c{time}s"
+downed-team-alert: "&c&l☠ &e{player} &cesta derribado en &f{x} {y} {z}&c. ¡Ve a reanimarlo!"
+
+revived: "&a&l✔ ¡Te han revivido!"
+self-revived: "&6&l✦ ¡El Tótem Bendito del Aether te levantó!"
+end-self-revived: "&5&l✦ &dTe desvaneciste en el End y reapareciste en tu hogar."
+end-self-revived-misfire: "&5&l✦ &dEl End te escupió en un lugar desconocido..."
+bled-out: "&c&l☠ Te desangraste."
+nether-curse-death: "&4&l☠ &cLa maldición del &4Tótem Maldito del Nether &cte arrastró a la muerte."
+
+surrender-prompt: "&8[&cSERVIDOR&8] &7Haz clic aqui para rendirte: "
+surrender-button: "&c&l[Rendirse]"
+surrender-hover: "&7Clic para rendirte y morir al instante."
+surrender-no-permission: "&cNo tienes permiso para rendirte."
+surrender-cooldown: "&7Debes aguantar &e{secs}s &7mas antes de poder rendirte."
+
+selfrevive-prompt: "&8[&6SERVIDOR&8] &7Haz clic aqui para auto-revivirte: "
+selfrevive-button: "&6&l[Auto-Revivir]"
+selfrevive-hover: "&7Gasta un Tótem Bendito del Aether para levantarte solo."
+selfrevive-no-item: "&cNo tienes un &6Tótem Bendito del Aether &cpara auto-revivirte."
+
+broadcast-downed: "&c☠ &e{player} &cha sido derribado. ¡Un aliado puede revivirlo!"
+broadcast-revived: "&a✔ &e{player} &afue revivido."
+broadcast-self-revived: "&6✦ &e{player} &6se levanto por su cuenta."
+broadcast-bled-out: "&c☠ &e{player} &cse desangro."
+
+stats-header: "&6&l✦ Estadisticas de &f{player}&6&l ✦"
+stats-downed: "&7Veces derribado: &f{n}"
+stats-revived: "&7Veces que te revivieron: &f{n}"
+stats-revives: "&7Companeros que reviviste: &a{n}"
+stats-self-revives: "&7Auto-revividas: &6{n}"
+stats-bled-out: "&7Veces que te desangraste: &c{n}"
+
+cmd-no-permission: "&cNo tienes permiso."
+cmd-player-not-found: "&cJugador no encontrado."
+cmd-not-downed: "&cEse jugador no esta derribado."
+cmd-already-downed: "&cEse jugador ya esta derribado."
+cmd-reload: "&aConfiguracion e idiomas recargados."
+cmd-revived-by-admin: "&aReviviste a &e{target}&a (admin)."
+cmd-downed-by-admin: "&aDerribaste a &e{target}&a (admin)."
+cmd-finished-by-admin: "&aRemataste a &e{target}&a (admin)."
+cmd-item-given: "&aLe diste &e{amount}x &aitem(s) a &e{target}&a."
+cmd-usage: "&7Usa &f/ur help &7para ver todos los comandos."
+
+grave-rescue: "&a✦ Se te devolvieron &f{items} &aobjetos que habían quedado en tus tumbas."
+grave-rescue-dropped: "&e▸ &7No te entraban &f{count}&7: te los dejé en el piso, a tus pies."
+
+# Los tres totems. Cambiar 'language' en config.yml cambia TAMBIEN estos nombres.
+item-self-name: "&6&lTótem Bendito Del Aether"
+item-self-lore:
+  - "&7Forjado por los dioses para que ningún"
+  - "&7héroe caiga en el olvido."
+  - ""
+  - "&a&lVENTAJAS:"
+  - "&a▪ &7Estando &c&lDERRIBADO&7, te &alevantas tú mismo&7."
+  - "&a▪ &7Al revivir te da &6corazones dorados &7(absorción + regen)."
+  - ""
+  - "&c&lDESVENTAJAS:"
+  - "&c▪ &7Al auto-revivir sufres &5mareo &7durante 20s."
+  - ""
+  - "&8» Botón Auto-Revivir / click derecho • 1 uso"
+
+item-boost-name: "&c&lTótem Maldito Del Nether"
+item-boost-lore:
+  - "&7Una maldición del inframundo que arranca"
+  - "&7la vida de un alma para devolvérsela a otra."
+  - ""
+  - "&a&lVENTAJAS:"
+  - "&a▪ &7Reanimas a los caídos &a&lmuchísimo más rápido&7."
+  - "&a▪ &7El revivido vuelve con &amás vida&7."
+  - ""
+  - "&c&lDESVENTAJAS:"
+  - "&c▪ &7Si &c&lMUERES &7llevándolo encima, &4&linsta-mueres&7"
+  - "&c   &7(aunque tengas el Tótem del Aether)."
+  - "&c▪ &7Solo te salva un &ftótem normal &7en la mano."
+  - "&c▪ &7Al revivir recibes &8&lMarchitamiento &7(Wither) 20s."
+  - ""
+  - "&8» Basta tenerlo en el inventario • se gasta al revivir"
+
+item-end-name: "&5&lTótem Desconocido Del End"
+item-end-lore:
+  - "&7Una reliquia del vacío cuyo poder nadie"
+  - "&7comprende del todo."
+  - ""
+  - "&a&lVENTAJAS:"
+  - "&a▪ &7Auto-revivir te &dteletransporta a tu hogar&7 (escape)."
+  - "&a▪ &7Revivir crea un &dárea de sanación&7 para tu equipo."
+  - ""
+  - "&c&lDESVENTAJAS:"
+  - "&c▪ &7Al auto-revivir sufres &8&lCeguera &7durante 2 min."
+  - "&c▪ &7Al curar en área recibes &5náusea &7(agotamiento)."
+  - ""
+  - "&8» Auto-revivir (derribado) o tenerlo en el inventario al revivir"
+
+pack-prompt: "&6UltraRevive &7- acepta el pack para ver los tótems"

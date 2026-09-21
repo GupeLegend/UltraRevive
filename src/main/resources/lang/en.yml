@@ -1,0 +1,111 @@
+# English. Codigos de color con & .
+# Placeholders: {time} {percent} {target} {player} {name} {n} {secs} {count} {items}
+
+prefix: "&8[&6Ultra&cRevive&8] &r"
+
+downed-title: "&c&l☠ YOU ARE DOWNED"
+downed-subtitle: "&7Hold on... a teammate can pick you up"
+downed-bossbar: "&c&l☠ DOWNED &7- &c{time}s"
+downed-actionbar: "&cYou are bleeding out... &c&l{time}s &7| A teammate must come close and sneak"
+being-revived-actionbar: "&aYou are being revived... &e&l{percent}%"
+
+reviver-actionbar: "&aReviving &e{target}&a... &e&l{percent}%"
+reviver-too-hungry: "&7You are too hungry to revive."
+reviver-success: "&aYou revived &e{target}&a!"
+revive-interrupted: "&c&l✖ &cYou got hit: the revive was interrupted."
+
+revive-paused: "&e&l⏸ Revive paused &7({percent}%) &8- &c{time}s"
+downed-team-alert: "&c&l☠ &e{player} &cis downed at &f{x} {y} {z}&c. Go revive them!"
+
+revived: "&a&l✔ You have been revived!"
+self-revived: "&6&l✦ The Blessed Totem of the Aether raised you!"
+end-self-revived: "&5&l✦ &dYou vanished into the End and reappeared at your home."
+end-self-revived-misfire: "&5&l✦ &dThe End spat you out in an unknown place..."
+bled-out: "&c&l☠ You bled out."
+nether-curse-death: "&4&l☠ &cThe curse of the &4Cursed Totem of the Nether &cdragged you to your death."
+
+surrender-prompt: "&8[&cSERVER&8] &7Click here to give up: "
+surrender-button: "&c&l[Give Up]"
+surrender-hover: "&7Click to give up and die instantly."
+surrender-no-permission: "&cYou don't have permission to give up."
+surrender-cooldown: "&7You must hold on &e{secs}s &7more before giving up."
+
+selfrevive-prompt: "&8[&6SERVER&8] &7Click here to self-revive: "
+selfrevive-button: "&6&l[Self-Revive]"
+selfrevive-hover: "&7Spend a Blessed Totem of the Aether to get back up alone."
+selfrevive-no-item: "&cYou don't have a &6Blessed Totem of the Aether &cto self-revive."
+
+broadcast-downed: "&c☠ &e{player} &cwas downed. A teammate can revive them!"
+broadcast-revived: "&a✔ &e{player} &awas revived."
+broadcast-self-revived: "&6✦ &e{player} &6got back up on their own."
+broadcast-bled-out: "&c☠ &e{player} &cbled out."
+
+stats-header: "&6&l✦ Stats of &f{player}&6&l ✦"
+stats-downed: "&7Times downed: &f{n}"
+stats-revived: "&7Times revived by others: &f{n}"
+stats-revives: "&7Teammates you revived: &a{n}"
+stats-self-revives: "&7Self-revives: &6{n}"
+stats-bled-out: "&7Times you bled out: &c{n}"
+
+cmd-no-permission: "&cYou don't have permission."
+cmd-player-not-found: "&cPlayer not found."
+cmd-not-downed: "&cThat player is not downed."
+cmd-already-downed: "&cThat player is already downed."
+cmd-reload: "&aConfig and languages reloaded."
+cmd-revived-by-admin: "&aYou revived &e{target}&a (admin)."
+cmd-downed-by-admin: "&aYou downed &e{target}&a (admin)."
+cmd-finished-by-admin: "&aYou finished &e{target}&a (admin)."
+cmd-item-given: "&aYou gave &e{amount}x &aitem(s) to &e{target}&a."
+cmd-usage: "&7Use &f/ur help &7to see all commands."
+
+grave-rescue: "&a✦ You got back &f{items} &aitems that were left in your graves."
+grave-rescue-dropped: "&e▸ &7&f{count}&7 didn't fit: I dropped them at your feet."
+
+# The three totems. Changing 'language' in config.yml also changes these names.
+item-self-name: "&6&lBlessed Totem Of The Aether"
+item-self-lore:
+  - "&7Forged by the gods so that no hero"
+  - "&7is ever left forgotten."
+  - ""
+  - "&a&lUPSIDES:"
+  - "&a▪ &7While &c&lDOWNED&7, you &aget back up on your own&7."
+  - "&a▪ &7Brings you back with &6golden hearts &7(absorption + regen)."
+  - ""
+  - "&c&lDOWNSIDES:"
+  - "&c▪ &7Self-reviving leaves you &5nauseous &7for 20s."
+  - ""
+  - "&8» Self-Revive button / right click • 1 use"
+
+item-boost-name: "&c&lCursed Totem Of The Nether"
+item-boost-lore:
+  - "&7A curse from below that tears the life out"
+  - "&7of one soul to hand it to another."
+  - ""
+  - "&a&lUPSIDES:"
+  - "&a▪ &7You get the fallen back up &a&lmuch faster&7."
+  - "&a▪ &7They come back with &amore health&7."
+  - ""
+  - "&c&lDOWNSIDES:"
+  - "&c▪ &7If you &c&lDIE &7carrying it, you &4&ldie outright&7"
+  - "&c   &7(even with the Aether Totem on you)."
+  - "&c▪ &7Only a &fvanilla totem &7in hand can save you."
+  - "&c▪ &7Reviving hits you with &8&lWither &7for 20s."
+  - ""
+  - "&8» Just carry it • consumed on revive"
+
+item-end-name: "&5&lUnknown Totem Of The End"
+item-end-lore:
+  - "&7A relic of the void whose power nobody"
+  - "&7fully understands."
+  - ""
+  - "&a&lUPSIDES:"
+  - "&a▪ &7Self-reviving &dteleports you home&7 (escape)."
+  - "&a▪ &7Reviving creates a &dhealing area&7 for your team."
+  - ""
+  - "&c&lDOWNSIDES:"
+  - "&c▪ &7Self-reviving leaves you &8&lBlind &7for 2 min."
+  - "&c▪ &7The healing area leaves you &5nauseous&7."
+  - ""
+  - "&8» Self-revive (downed) or carry it when reviving someone"
+
+pack-prompt: "&6UltraRevive &7- accept the pack to see the totems"

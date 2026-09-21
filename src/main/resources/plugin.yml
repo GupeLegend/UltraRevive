@@ -1,0 +1,51 @@
+name: UltraRevive
+version: '1.0'
+main: mc.gupe.revive.UltraRevive
+api-version: '26.1.2'
+author: Social Studio
+description: No mueras de una - quedas DERRIBADO y tu equipo te levanta. Con tres totems propios, muy dificiles de conseguir, que cambian las reglas del rescate.
+website: https://modrinth.com/plugin/ultrarevive
+folia-supported: false
+# Todos OPCIONALES. LuckPerms solo se usa para mostrar el rango.
+softdepend: [LuckPerms, LPC, ItemEdit, ItemTag]
+
+commands:
+  ultrarevive:
+    description: Comandos de UltraRevive.
+    aliases: [ur, revivir]
+    usage: |
+      /ur help                         - lista todos los comandos
+      /ur reload                       - recarga config e idiomas
+      /ur revive|down|finish <jugador> - gestionar derribados (admin)
+      /ur give <self|boost|end> [jug]  - dar los totems (admin)
+      /ur stats [jugador]              - estadisticas de rescates
+      /ur surrender                    - rendirse (estando derribado)
+
+permissions:
+  ultrarevive.admin:
+    description: Comandos de administracion.
+    default: op
+  ultrarevive.bypass:
+    description: Este jugador NO se derriba (muere normal).
+    default: false
+  ultrarevive.revive:
+    description: Permite levantar a otros jugadores.
+    default: true
+  ultrarevive.surrender:
+    description: Permite rendirse estando derribado.
+    default: true
+
+  # Nodos del nombre anterior (ultrarevivir.*), declarados como PADRES de los nuevos para que a
+  # quien ya se los dio en LuckPerms le sigan funcionando sin tocar nada.
+  ultrarevivir.admin:
+    default: false
+    children: { ultrarevive.admin: true }
+  ultrarevivir.bypass:
+    default: false
+    children: { ultrarevive.bypass: true }
+  ultrarevivir.revive:
+    default: false
+    children: { ultrarevive.revive: true }
+  ultrarevivir.surrender:
+    default: false
+    children: { ultrarevive.surrender: true }

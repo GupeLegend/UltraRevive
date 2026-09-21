@@ -1,0 +1,171 @@
+# UltraRevive. Se guarda en plugins/UltraView/UltraRevive/ y NO se sobreescribe al actualizar.
+
+# Idioma / Language: solo 'en' y 'es'.
+# ⚠ Esto cambia TODO: mensajes del chat Y el nombre y lore de los tres totems.
+language: en
+enabled-worlds: []
+
+# --- Tiempos ---
+down-duration: 60
+revive-duration: 5
+revive-radius: 3.0
+revive-by-sneaking: true
+
+# --- Vida ---
+downed-health: 2.0
+revive-health: 10.0
+
+# --- Visual ---
+glow: true
+glow-color: RED
+pose-crawl: true
+blindness: true
+slowness-amplifier: 6
+particles: true
+bossbar: true
+bossbar-color: RED
+
+# --- Reglas ---
+finish-by-players: true
+immune-to-mobs: true
+die-on-quit: true
+adventure-mode: true
+affect-ops: true
+
+# Varios companeros agachados reaniman mas rapido.
+coop-revive:
+  enabled: true
+  # El progreso se CONGELA estos segundos si el reanimador se aleja un instante (un empujon en
+  # PvP, un mob que estorba) antes de empezar a decaer. 0 = se pierde de golpe.
+  grace-seconds: 2
+  bonus-per-extra: 1.0
+  max-extra: 3
+
+# Latido y particulas de sangre en los ultimos segundos del derribado.
+bleed-tension:
+  enabled: true
+  threshold-percent: 25.0
+  heartbeat-sound: ENTITY_WARDEN_HEARTBEAT
+
+# Haz de particulas sobre el caido para que el equipo lo ubique.
+downed-beacon:
+  enabled: true
+  team-only: false
+  particle: END_ROD
+  team-alert: true
+
+# Si te pegan mientras reanimas, se interrumpe. Apagado para no cambiar el balance de golpe.
+interrupt-on-damage:
+  enabled: false
+  penalty: 1.0
+
+# Si te derriban una y otra vez en poco tiempo, aguantas menos antes de desangrarte.
+downed-fatigue:
+  enabled: false
+  window-seconds: 120
+  factor-per-stack: 0.75
+  min-fraction: 0.3
+
+hunger-cost: 6
+
+# --- Anuncios ---
+broadcast-downed: true
+broadcast-radius: 30
+
+# --- Sonidos ---
+sound-downed: ENTITY_PLAYER_HURT
+sound-revived: ENTITY_PLAYER_LEVELUP
+sound-bled-out: ENTITY_WITHER_DEATH
+sound-surrender: ENTITY_TOTEM_USE
+surrender-particles: true
+surrender-cooldown: 0
+
+stats: true
+
+# --- Resource pack ---
+# internal = lo sirve el plugin y necesita el puerto abierto. url = lo servis vos.
+resource-pack:
+  enabled: true
+  mode: internal
+  host: "AUTO"
+  port: 8081
+  url: ""
+  force: false
+  # Vacio = usa el texto del idioma. Escribi algo aca solo si querés el tuyo propio.
+  prompt: ""
+
+# --- Los tres totems ---
+# Todos son TOTEM_OF_UNDYING distinguidos por custom-model-data, asi que los totems normales
+# siguen viendose normales. Se dan con /ur give <self|boost|end> [jugador] [cantidad].
+# El NOMBRE y el LORE estan en lang/<idioma>.yml, no aca: asi cambian junto con 'language'.
+items:
+
+  self-revive:
+    enabled: true
+    material: TOTEM_OF_UNDYING
+    custom-model-data: 130001
+    glow: true
+    health: 6.0
+    sound: ITEM_TOTEM_USE
+    # false = sin mareo ni corazones dorados al auto-revivir.
+    side-effects: true
+    loot:
+      enabled: true
+      tables: []
+      chance: 0.0
+      fishing: true
+      fishing-chance: 0.0067
+
+  revive-boost:
+    enabled: true
+    material: TOTEM_OF_UNDYING
+    custom-model-data: 130003
+    glow: true
+    speed-multiplier: 3.0
+    revive-health: 20.0
+    reward-effects: true
+    curse-insta-death: true
+    # Segundos de Wither que recibe QUIEN revive. 0 = sin Wither.
+    curse-wither-seconds: 20
+    loot:
+      enabled: true
+      # Una probabilidad por estructura.
+      tables:
+        ruined_portal: 0.0067
+        bastion_treasure: 0.012
+        nether_bridge: 0.012
+      chance: 0.02
+      fishing: false
+      fishing-chance: 0.0
+
+  end-revive:
+    enabled: true
+    material: TOTEM_OF_UNDYING
+    custom-model-data: 130007
+    glow: true
+    teleport-home: true
+    self-revive-health: 6.0
+    blindness-seconds: 120
+    # Probabilidad (0.0-1.0) de que el escape falle y te deje en un punto al azar. 0 = nunca.
+    unknown-misfire-chance: 0.0
+    unknown-misfire-radius: 24
+    area-heal-radius: 5
+    area-heal-duration: 6
+    area-heal-level: 1
+    area-particle: HEART
+    area-heal-team-only: true
+    area-slow-falling: true
+    area-slow-falling-seconds: 4
+    reviver-nausea-seconds: 20
+    sound: ENTITY_ENDERMAN_TELEPORT
+    loot:
+      enabled: true
+      tables:
+        end_city_treasure: 0.0000067
+      chance: 0.0000067
+      fishing: false
+      fishing-chance: 0.0
+      # ⚠ El barco y la ciudad del End comparten la MISMA loot table, asi que "solo barcos" no se
+      # puede pedir por tabla. Con esto se mira el mundo y se busca la elytra en su marco, que es
+      # lo unico exclusivo del barco.
+      require-end-ship: true
