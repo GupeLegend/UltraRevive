@@ -1,43 +1,51 @@
 package mc.gupe.revive;
 
-import mc.gupe.revive.commands.ReviveCommand;
-import mc.gupe.revive.listeners.CombatListener;
-import mc.gupe.revive.listeners.ConnectionListener;
-import mc.gupe.revive.listeners.LootListener;
-import mc.gupe.revive.listeners.RestrictionListener;
+import mc.gupe.revive.command.ReviveCommand;
+import mc.gupe.revive.config.Lang;
+import mc.gupe.revive.config.Settings;
+import mc.gupe.revive.integration.LuckPermsHook;
+import mc.gupe.revive.item.Items;
+import mc.gupe.revive.listener.CombatListener;
+import mc.gupe.revive.listener.ConnectionListener;
+import mc.gupe.revive.listener.LootListener;
+import mc.gupe.revive.listener.RestrictionListener;
+import mc.gupe.revive.listener.StatsListener;
+import mc.gupe.revive.migration.FolderMigration;
+import mc.gupe.revive.migration.GraveRescue;
+import mc.gupe.revive.migration.LegacyNameMigration;
+import mc.gupe.revive.model.Cooldowns;
+import mc.gupe.revive.pack.ResourcePackManager;
+import mc.gupe.revive.revive.ReviveManager;
+import mc.gupe.revive.stats.StatsManager;
+import mc.gupe.revive.util.PlayerHeads;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/** UltraRevive — no morís de una: quedás DERRIBADO y tu equipo puede levantarte. */
+/** UltraRevive - you don't die outright: you go DOWNED and your team can pick you back up. */
 public final class UltraRevive extends JavaPlugin {
-
-    /** Carpeta compartida de la familia Ultra. */
-    private UltraView view;
-    public UltraView view() { return view; }
 
     private Settings settings;
     private Lang lang;
     private Items items;
     private ReviveManager manager;
-    private PackManager pack;
+    private ResourcePackManager pack;
     private StatsManager stats;
-    private LuckHook luck;
-    private Heads heads;
+    private LuckPermsHook luck;
+    private PlayerHeads heads;
     private final Cooldowns cooldowns = new Cooldowns();
 
     @Override
     public void onEnable() {
-        // VA PRIMERO: crea plugins/UltraView/ y se trae lo que hubiera de una instalación anterior.
-        // Cualquier extracción de recursos antes de esto escribiría en la carpeta equivocada.
-        view = new UltraView(this);
-        // Antes de extraer NADA del jar: si el config nuevo ya existiera, no habria donde
-        // volcar los ajustes del viejo (el plugin se llamaba UltraRevive, con "r" al final,
-        // asi que Bukkit le daba otra carpeta y el server arrancaria en blanco).
-        Migration.run(this, view);
+        // Must run first, before anything extracts a resource or reads the config: both bring
+        // over data from older install layouts and would otherwise find the new files already
+        // in place and skip themselves.
+        FolderMigration.run(this);
+        LegacyNameMigration.run(this);
 
-        view.saveResource("config.yml");
+        extractIfMissing("config.yml");
         for (String l : new String[]{"en", "es"}) {
-            view.saveResource("lang/" + l + ".yml");
+            extractIfMissing("lang/" + l + ".yml");
         }
 
         settings = new Settings(this);
@@ -45,10 +53,10 @@ public final class UltraRevive extends JavaPlugin {
         lang = new Lang(this);
         lang.load(settings.language);
 
-        items = new Items(this);  // los 3 tótems
+        items = new Items(this);
         stats = new StatsManager(this);
-        luck = new LuckHook(this);
-        heads = new Heads(this);
+        luck = new LuckPermsHook(this);
+        heads = new PlayerHeads(this);
         manager = new ReviveManager(this);
 
         PluginManager pm = getServer().getPluginManager();
@@ -56,68 +64,106 @@ public final class UltraRevive extends JavaPlugin {
         pm.registerEvents(new RestrictionListener(this), this);
         pm.registerEvents(new ConnectionListener(this), this);
         pm.registerEvents(new LootListener(this), this);
-        pm.registerEvents(new mc.gupe.revive.listeners.StatsListener(this), this);
+        pm.registerEvents(new StatsListener(this), this);
 
         ReviveCommand cmd = new ReviveCommand(this);
-        for (String n : new String[]{"ultrarevive"}) {
-            if (getCommand(n) != null) {
-                getCommand(n).setExecutor(cmd);
-                getCommand(n).setTabCompleter(cmd);
-            }
+        if (getCommand("ultrarevive") != null) {
+            getCommand("ultrarevive").setExecutor(cmd);
+            getCommand("ultrarevive").setTabCompleter(cmd);
         }
 
-        // Rescate de tumbas: solo la primera vez, para devolverle a la gente lo que habia
-        // quedado adentro cuando las tumbas salieron del plugin. Si no hay nada pendiente ni
-        // siquiera se registra el listener.
-        RescateTumbas rescate = new RescateTumbas(this);
-        rescate.importar();
-        if (rescate.hayPendientes()) getServer().getPluginManager().registerEvents(rescate, this);
+        // One-time grave rescue: hands back whatever was left inside graves from before the grave
+        // system was removed. If nothing is pending, the listener isn't even registered.
+        GraveRescue graveRescue = new GraveRescue(this);
+        graveRescue.importFromOldGraves();
+        if (graveRescue.hasPending()) {
+            getServer().getPluginManager().registerEvents(graveRescue, this);
+        }
 
-        pack = new PackManager(this);
+        pack = new ResourcePackManager(this);
         pack.start();
 
         manager.start();
-        getLogger().info("UltraRevive v" + getPluginMeta().getVersion() + " activado.");
+        getLogger().info("UltraRevive v" + getPluginMeta().getVersion() + " enabled.");
     }
 
     @Override
     public void onDisable() {
-        if (manager != null) manager.shutdown();
-        if (pack != null) pack.stop();
-        if (stats != null) stats.flush();
+        if (manager != null) {
+            manager.shutdown();
+        }
+        if (pack != null) {
+            pack.stop();
+        }
+        if (stats != null) {
+            stats.flush();
+        }
     }
 
-    /** Recarga config e idiomas (/ur reload). */
+    /** Reloads config and languages (/ur reload). */
     public void reload() {
-        view.reload();
         settings.load();
         lang.load(settings.language);
         manager.applyConfig();
     }
 
-    // ---- accesores ----
-    public Settings settings() { return settings; }
-    public Lang lang() { return lang; }
-    public Items items() { return items; }
-    public ReviveManager manager() { return manager; }
-    public PackManager pack() { return pack; }
-    public StatsManager stats() { return stats; }
-    public Cooldowns cooldowns() { return cooldowns; }
-    public LuckHook luck() { return luck; }
-    public Heads heads() { return heads; }
+    /** Extracts a jar resource only if it's missing, so a normal restart never logs a warning. */
+    public void extractIfMissing(String path) {
+        if (!new java.io.File(getDataFolder(), path).exists()) {
+            saveResource(path, false);
+        }
+    }
 
-    // API PÚBLICA — la consumen otros plugins POR REFLEXIÓN.
-    // ⚠ No cambiar estas firmas sin avisar: se llaman por nombre.
+    public Settings settings() {
+        return settings;
+    }
 
-    /** ¿Ese jugador está DERRIBADO ahora mismo? */
-    public boolean apiIsDowned(org.bukkit.entity.Player p) {
+    public Lang lang() {
+        return lang;
+    }
+
+    public Items items() {
+        return items;
+    }
+
+    public ReviveManager manager() {
+        return manager;
+    }
+
+    public ResourcePackManager pack() {
+        return pack;
+    }
+
+    public StatsManager stats() {
+        return stats;
+    }
+
+    public Cooldowns cooldowns() {
+        return cooldowns;
+    }
+
+    public LuckPermsHook luck() {
+        return luck;
+    }
+
+    public PlayerHeads heads() {
+        return heads;
+    }
+
+    // PUBLIC API - consumed by other plugins BY REFLECTION.
+    // Do not change these signatures without warning: they're called by name.
+
+    /** Is that player DOWNED right now? */
+    public boolean apiIsDowned(Player p) {
         return p != null && manager != null && manager.isDowned(p.getUniqueId());
     }
 
-    /** ¿Lo están levantando en este momento? */
-    public boolean apiIsReviving(org.bukkit.entity.Player p) {
+    /** Is someone reviving them right now? */
+    public boolean apiIsReviving(Player p) {
         return p != null && manager != null && manager.isActivelyReviving(p.getUniqueId());
     }
 
-    public boolean apiAvailable() { return true; }
+    public boolean apiAvailable() {
+        return true;
+    }
 }

@@ -4,18 +4,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-/** Se dispara cuando un jugador DEJA de estar derribado, sea como sea que haya terminado. */
+/** Fired when a player stops being downed, however that ended. */
 public final class PlayerRevivedEvent extends Event {
 
-    /** Cómo terminó el derribo. */
+    /** How the downed state ended. */
     public enum Cause {
-        /** Otro jugador lo levantó agachándose al lado. */
+        /** Another player picked them up by sneaking next to them. */
         REVIVED,
-        /** Se levantó solo con el Tótem de los Dioses / del End. */
+        /** They got back up on their own with the Aether or End totem. */
         SELF_REVIVED,
-        /** Se le acabó el tiempo y murió de verdad. */
+        /** Time ran out and they died for real. */
         BLED_OUT,
-        /** Apretó [Rendirse] y murió al instante. */
+        /** They clicked [Give Up] and died instantly. */
         SURRENDERED
     }
 
@@ -31,18 +31,32 @@ public final class PlayerRevivedEvent extends Event {
         this.cause = cause;
     }
 
-    /** El jugador que estaba derribado. */
-    public Player getPlayer() { return player; }
+    /** The player who was downed. */
+    public Player getPlayer() {
+        return player;
+    }
 
-    /** Quién lo levantó, o null si se levantó solo / se desangró / se rindió. */
-    public Player getReviver() { return reviver; }
+    /** Who revived them, or null if they self-revived, bled out, or surrendered. */
+    public Player getReviver() {
+        return reviver;
+    }
 
-    /** Cómo terminó el derribo. */
-    public Cause getCause() { return cause; }
+    /** How the downed state ended. */
+    public Cause getCause() {
+        return cause;
+    }
 
-    /** Atajo: ¿terminó vivo? (false = se desangró o se rindió). */
-    public boolean survived() { return cause == Cause.REVIVED || cause == Cause.SELF_REVIVED; }
+    /** Shortcut: did they end up alive? (false = bled out or surrendered). */
+    public boolean survived() {
+        return cause == Cause.REVIVED || cause == Cause.SELF_REVIVED;
+    }
 
-    @Override public HandlerList getHandlers() { return HANDLERS; }
-    public static HandlerList getHandlerList() { return HANDLERS; }
+    @Override
+    public HandlerList getHandlers() {
+        return HANDLERS;
+    }
+
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
 }

@@ -1,4 +1,4 @@
-# UltraRevive. Se guarda en plugins/UltraView/UltraRevive/ y NO se sobreescribe al actualizar.
+# UltraRevive. Se guarda en plugins/UltraRevive/ y NO se sobreescribe al actualizar.
 
 # Idioma / Language: solo 'en' y 'es'.
 # ⚠ Esto cambia TODO: mensajes del chat Y el nombre y lore de los tres totems.
@@ -50,9 +50,7 @@ bleed-tension:
 # Haz de particulas sobre el caido para que el equipo lo ubique.
 downed-beacon:
   enabled: true
-  team-only: false
   particle: END_ROD
-  team-alert: true
 
 # Si te pegan mientras reanimas, se interrumpe. Apagado para no cambiar el balance de golpe.
 interrupt-on-damage:
@@ -109,12 +107,14 @@ items:
     sound: ITEM_TOTEM_USE
     # false = sin mareo ni corazones dorados al auto-revivir.
     side-effects: true
+    # Sale de cofres de TESORO ENTERRADO (20%) y de pesca (0.5%). En ningun otro cofre.
     loot:
       enabled: true
-      tables: []
+      tables:
+        buried_treasure: 0.20
       chance: 0.0
       fishing: true
-      fishing-chance: 0.0067
+      fishing-chance: 0.005
 
   revive-boost:
     enabled: true

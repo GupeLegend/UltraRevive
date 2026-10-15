@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-/** Se dispara justo DESPUÉS de que un jugador queda derribado (no muere: se desangra). */
+/** Fired right after a player goes down (not dead yet: bleeding out). */
 public final class PlayerDownedEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
@@ -17,12 +17,22 @@ public final class PlayerDownedEvent extends Event {
         this.durationTicks = durationTicks;
     }
 
-    /** El jugador que quedó derribado. */
-    public Player getPlayer() { return player; }
+    /** The player who went down. */
+    public Player getPlayer() {
+        return player;
+    }
 
-    /** Cuánto aguanta antes de desangrarse, en ticks (ya con la fatiga por derribos aplicada). */
-    public int getDurationTicks() { return durationTicks; }
+    /** How long they can hold on before bleeding out, in ticks (fatigue already applied). */
+    public int getDurationTicks() {
+        return durationTicks;
+    }
 
-    @Override public HandlerList getHandlers() { return HANDLERS; }
-    public static HandlerList getHandlerList() { return HANDLERS; }
+    @Override
+    public HandlerList getHandlers() {
+        return HANDLERS;
+    }
+
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
 }

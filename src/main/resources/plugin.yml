@@ -3,40 +3,40 @@ version: '1.0'
 main: mc.gupe.revive.UltraRevive
 api-version: '26.1.2'
 author: Social Studio
-description: No mueras de una - quedas DERRIBADO y tu equipo te levanta. Con tres totems propios, muy dificiles de conseguir, que cambian las reglas del rescate.
+description: Don't die outright - go DOWNED and let your team pick you back up. With three hard-to-get totems of its own that change the rescue's rules.
 website: https://modrinth.com/plugin/ultrarevive
 folia-supported: false
-# Todos OPCIONALES. LuckPerms solo se usa para mostrar el rango.
+# All OPTIONAL. LuckPerms is only used to show the player's rank.
 softdepend: [LuckPerms, LPC, ItemEdit, ItemTag]
 
 commands:
   ultrarevive:
-    description: Comandos de UltraRevive.
+    description: UltraRevive commands.
     aliases: [ur, revivir]
     usage: |
-      /ur help                         - lista todos los comandos
-      /ur reload                       - recarga config e idiomas
-      /ur revive|down|finish <jugador> - gestionar derribados (admin)
-      /ur give <self|boost|end> [jug]  - dar los totems (admin)
-      /ur stats [jugador]              - estadisticas de rescates
-      /ur surrender                    - rendirse (estando derribado)
+      /ur help                         - lists every command
+      /ur reload                       - reloads the config and languages
+      /ur revive|down|finish <player>  - manage downed players (admin)
+      /ur give <self|boost|end> [plyr] - hand out the totems (admin)
+      /ur stats [player]               - rescue statistics
+      /ur surrender                    - give up (while downed)
 
 permissions:
   ultrarevive.admin:
-    description: Comandos de administracion.
+    description: Administration commands.
     default: op
   ultrarevive.bypass:
-    description: Este jugador NO se derriba (muere normal).
+    description: This player does NOT go down (dies normally instead).
     default: false
   ultrarevive.revive:
-    description: Permite levantar a otros jugadores.
+    description: Allows reviving other players.
     default: true
   ultrarevive.surrender:
-    description: Permite rendirse estando derribado.
+    description: Allows giving up while downed.
     default: true
 
-  # Nodos del nombre anterior (ultrarevivir.*), declarados como PADRES de los nuevos para que a
-  # quien ya se los dio en LuckPerms le sigan funcionando sin tocar nada.
+  # Nodes under the plugin's previous name (ultrarevivir.*), declared as PARENTS of the new ones
+  # so anyone who was already granted them in LuckPerms keeps working without changing anything.
   ultrarevivir.admin:
     default: false
     children: { ultrarevive.admin: true }

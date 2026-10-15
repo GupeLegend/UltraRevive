@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/Logo.png" alt="UltraRevive" width="280"></p>
+
 # UltraRevive
 
 [![Minecraft](https://img.shields.io/badge/Minecraft-26.1.2-brightgreen)](https://papermc.io)
@@ -22,12 +24,26 @@ of the rescue:
 
 | Totem | Drops from | Effect |
 |---|---|---|
-| **Blessed Totem of the Aether** | Fishing, 0.67% | Get yourself back up. |
+| **Blessed Totem of the Aether** | Buried treasure chests 20%, fishing 0.5% | Get yourself back up. |
 | **Cursed Totem of the Nether** | Ruined portals 0.67%, bastions and fortresses 1.2% | Revive others 3× faster — but **die outright** if you're carrying it. |
 | **Unknown Totem of the End** | End cities, 0.00067% | Get up **and teleport home**; leaves a healing area when used on someone else. |
 
 Carrying a totem does **not** stop you from going down. That's deliberate — it's what makes the
 self-revive button meaningful.
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/Preview1.png" alt="Fishing up the Blessed Totem of the Aether" title="Fishing up the Blessed Totem of the Aether" width="49%">
+  <img src="docs/Preview2.png" alt="Cursed Totem of the Nether in a ruined portal chest" title="Cursed Totem of the Nether in a ruined portal chest" width="49%">
+</p>
+<p align="center">
+  <img src="docs/Preview3.png" alt="Cursed Totem of the Nether in a fortress chest" title="Cursed Totem of the Nether in a fortress chest" width="49%">
+  <img src="docs/Preview4.png" alt="Cursed Totem of the Nether in a bastion chest" title="Cursed Totem of the Nether in a bastion chest" width="49%">
+</p>
+<p align="center">
+  <img src="docs/Preview5.png" alt="Unknown Totem of the End on an End ship" title="Unknown Totem of the End on an End ship" width="49%">
+</p>
 
 ## Commands and permissions
 
@@ -60,8 +76,9 @@ conveniences.
 Drop the jar in `plugins/` and start the server. Everything is configured and working out of the
 box.
 
-Data lives in **`plugins/UltraView/UltraRevive/`**, not in the plugin's own folder — so everything
-from Social Studio sits together. Your config is never overwritten on update.
+Data lives in the plugin's own **`plugins/UltraRevive/`** folder. Older installs that still have
+data in the previous shared folder (`plugins/UltraView/UltraRevive/`) get it moved over
+automatically on startup. Your config is never overwritten on update.
 
 The plugin serves its own resource pack for the totem textures over HTTP (port 8081 by default).
 If the port isn't open it says so in console and disables the pack; the totems then look like
@@ -71,32 +88,44 @@ vanilla totems and the rest works normally.
 
 ## Building
 
-No Gradle, no Maven — just `javac`.
+With Gradle (recommended):
 
 ```bash
-bash compilar.sh          # -> ../../Jars/UltraRevive-1.0.jar
+./gradlew build           # -> build/libs/UltraRevive-1.0.jar
 ```
 
-The script downloads its dependencies to `../_libs/` on first run. You need **JDK 25**: Paper 26 is
-compiled for Java 25, and with an older JDK `javac` fails with a `cannot access Player` error that
-looks like an API problem but isn't.
+Or without Gradle, just `javac`:
+
+```bash
+bash compilar.sh          # -> build/UltraRevive-1.0.jar
+```
+
+`compilar.sh` downloads its dependencies to a local `libs/` folder on first run. Either way you
+need **JDK 25**: Paper 26 is compiled for Java 25, and with an older JDK the compiler fails with a
+`cannot access Player` error that looks like an API problem but isn't.
 
 ## Project layout
 
 ```
 src/main/java/mc/gupe/revive/
-  UltraRevive.java        startup, listener and command registration
-  ReviveManager.java      the core: going down, the countdown, reviving, bleeding out
-  Items.java              builds and recognises the three totems
-  Settings.java           reads config.yml into typed fields
-  listeners/              combat, connection, loot, restrictions, stats
-  api/                    public API and events
-  commands/               /ur
+  UltraRevive.java         startup, listener and command registration
+  api/                     public API and events
+  command/                 /ur
+  config/                  config.yml and lang/*.yml loading
+  integration/             optional LuckPerms bridge
+  item/                    builds and recognises the three totems
+  listener/                combat, connection, loot, restrictions, stats
+  migration/               moving data from older install layouts
+  model/                   downed-player state, cooldowns
+  pack/                    the resource pack's HTTP server
+  revive/                  the core: going down, the countdown, reviving, bleeding out
+  stats/                   per-player statistics
+  util/                    player-head skins for menus
 
 src/main/resources/
-  config.yml              every timer, health value, effect and drop chance
-  lang/{en,es}.yml        all player-facing text, including item names and lore
-  resourcepack.zip        the totem textures, served by the plugin
+  config.yml               every timer, health value, effect and drop chance
+  lang/{en,es}.yml          all player-facing text, including item names and lore
+  resourcepack.zip          the totem textures, served by the plugin
 ```
 
 ## Internationalisation
@@ -129,20 +158,16 @@ two deaths for one hit — the inventory empties on the first and the second tak
 This bit us in production.
 
 **Never `setOwningPlayer(OfflinePlayer)` in a menu.** If that player's profile isn't cached, Paper
-goes and asks Mojang for the textures **from the main thread**. Use the `Heads` cache instead.
+goes and asks Mojang for the textures **from the main thread**. Use the `util.PlayerHeads` cache
+instead.
 
 **The hidden tag on an item carries the plugin name.** `new NamespacedKey(plugin, "ur_item")`
 stores it as `ultrarevive:ur_item`. Rename the plugin and every totem already handed out stops
-being recognised — they become plain totems of undying. That's what `Legacy` is for; don't delete
-it.
+being recognised — they become plain totems of undying. That's what `item.LegacyKeys` is for;
+don't delete it.
 
-Code comments and config files are written in Spanish.
+Code comments are in English; `config.yml` stays in Spanish, like the rest of its options.
 
-## License & credits
+## License
 
-UltraRevive is open source under the [MIT License](LICENSE).
-
-You are free to use, modify and redistribute it, as long as you keep the
-copyright notice and license text. If you publish a fork or a derivative,
-a mention like "Based on UltraRevive by Social Studio" with a link to this
-repository is very much appreciated.
+MIT — see [LICENSE](LICENSE). Use it, change it, ship it; just keep the copyright notice.
