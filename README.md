@@ -7,29 +7,21 @@
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://adoptium.net)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-**Don't die on the first hit.** You go down instead — prone, glowing, unable to fight — and your
-team has a few seconds to pick you back up.
-
 A Paper plugin by **Social Studio**.
 
+**Don't die on the first hit.** When a blow would kill you, you go down instead: prone, glowing,
+unable to fight. Your team has a few seconds to reach you and pick you back up. If nobody comes, you
+bleed out.
+
+UltraRevive turns every fight into a team fight. Rushing in alone is a risk, staying close to your
+friends pays off, and a rescue under fire is one of the best moments you'll have on your server.
+
+```
+[UltraRevive] ☠ Steve was downed. A teammate can revive them!
+[UltraRevive] ✔ Steve was revived.
+```
+
 ---
-
-## What it does
-
-When a hit would kill you, you drop to the floor with a boss bar counting down your last seconds.
-A teammate crouches next to you to revive you. Nobody comes, and you bleed out and die for real.
-
-Three totems — real items with their own textures and an un-fakeable hidden tag — change the rules
-of the rescue:
-
-| Totem | Drops from | Effect |
-|---|---|---|
-| **Blessed Totem of the Aether** | Buried treasure chests 20%, fishing 0.5% | Get yourself back up. |
-| **Cursed Totem of the Nether** | Ruined portals 0.67%, bastions and fortresses 1.2% | Revive others 3× faster — but **die outright** if you're carrying it. |
-| **Unknown Totem of the End** | End cities, 0.00067% | Get up **and teleport home**; leaves a healing area when used on someone else. |
-
-Carrying a totem does **not** stop you from going down. That's deliberate — it's what makes the
-self-revive button meaningful.
 
 ## Screenshots
 
@@ -45,44 +37,163 @@ self-revive button meaningful.
   <img src="docs/Preview5.png" alt="Unknown Totem of the End on an End ship" title="Unknown Totem of the End on an End ship" width="49%">
 </p>
 
-## Commands and permissions
+## ☠ Going down
 
-```
-/ur                              help
-/ur reload                       reload config and language
-/ur revive|down|finish <player>  manage downed players   (admin)
-/ur give <self|boost|end> [p]    hand out the totems     (admin)
-/ur stats [player]               rescue statistics
-/ur surrender                    give up while downed
+When a hit would kill you, you drop to the floor instead of dying.
+
+- You **crawl**, **glow red** and can't attack, break or place blocks, drop items or eat.
+- You're slowed and partly blinded, and a **boss bar counts down** your last seconds (60 by
+  default).
+- **Mobs and the environment can't finish you off.** Another player can.
+- The void still kills, so nobody is left falling forever.
+- **Logging out while down kills you.** Combat-logging doesn't save anyone.
+
+The last seconds are tense on purpose. A **heartbeat** speeds up as time runs out, blood particles
+start to fall, and a **beam of light** over your body shows your team where you are.
+
+Two buttons appear in chat:
+
+- **[Surrender]**: give up and die right away.
+- **[Self-revive]**: only if you carry a totem that allows it.
+
+## ✚ Reviving
+
+**Crouch next to a downed player for 5 seconds** and they're back on their feet.
+
+- **It costs hunger.** If you're starving, you can't do it, so bring food.
+- **Co-op reviving**: more people crouching at once go faster.
+- **Progress isn't lost at once.** If you step away, it freezes for a moment and then drains
+  slowly, so you can dodge an arrow and come back.
+- Optional rules for harder servers:
+  - getting hit while reviving interrupts you;
+  - **fatigue**: going down again and again in a short time shortens how long you last.
+
+Nearby players are told who went down, who got back up and who bled out, each with its own sound.
+
+## ✦ The three totems
+
+Three real items, each with its own texture. They **don't** stop you from going down; they change
+what happens after. That's what makes the self-revive button worth something.
+
+### Blessed Totem of the Aether
+*Golden, with green eyes.*
+Use it while downed (button or right-click) and you stand up on your own, with Absorption,
+Regeneration and a moment of dizziness.
+**Found in:** buried treasure chests (**20%**) and fishing (**0.5%**).
+
+### Cursed Totem of the Nether
+*Worn stone, with red eyes.*
+While it's in your inventory you revive others **3× faster**, and they come back at **full health**
+with Regeneration and Absorption. It costs you **20 seconds of Wither**. And if you die while
+carrying it, there's no going down: **you die outright**.
+**Found in:** ruined portals (**0.67%**), bastions and Nether fortresses (**1.2%**).
+
+### Unknown Totem of the End
+*Pale bone, with purple eyes.*
+Use it while downed and you get up **and get sent to your bed**, blinded for two minutes. Use it
+while reviving someone else and it leaves a **healing area** behind for your team.
+**Found in:** End ship chests (**0.00067%**). Yes, it's meant to be a legend.
+
+Every chance can be changed in the config, per structure. The plugin marks its totems with a hidden
+tag, so a renamed vanilla totem can't be used as one of them.
+
+## 🎨 The resource pack
+
+The totem textures come in a small resource pack, and **the plugin serves it by itself**: players
+are offered it when they join, so you don't have to host anything.
+
+- It **only changes the three UltraRevive totems** (custom model data `130001`, `130003` and
+  `130007`). A normal Totem of Undying keeps its vanilla look, and no other item, block or menu is
+  touched.
+- Without the pack everything still works; the totems just look like normal totems.
+
+```yaml
+resource-pack:
+  enabled: true
+  mode: internal     # internal = the plugin serves it · url = you host it
+  port: 8081         # open this port on your host
+  url: ""            # only for mode: url
+  force: false       # true = players must accept it
 ```
 
-| Permission | Default |
+**Already sending your own pack?** Add the UltraRevive pack to it (or import the ZIP into your pack
+manager and rebuild), then set `resource-pack.enabled: false`. If your pack also changes the Totem
+of Undying, merge that one file by hand: keep the three entries above and leave your model as the
+fallback.
+
+## 📊 Stats
+
+`/ur stats` shows how many times you went down, how many times you were revived, how many teammates
+you saved, how many times you got up on your own, and how many times you bled out.
+
+---
+
+## Commands
+
+| Command | What it does |
 |---|---|
-| `ultrarevive.admin` | op |
-| `ultrarevive.bypass` | `false` — that player dies normally, never goes down |
-| `ultrarevive.revive` | `true` |
-| `ultrarevive.surrender` | `true` |
+| `/ur` | Help |
+| `/ur surrender` | Give up while downed |
+| `/ur selfrevive` | Use a totem to get up |
+| `/ur stats [player]` | Rescue statistics |
+| `/ur reload` | Reload config and language (admin) |
+| `/ur revive <player>` | Revive a downed player (admin) |
+| `/ur down <player>` | Down a player (admin) |
+| `/ur finish <player>` | Finish off a downed player (admin) |
+| `/ur give <self\|boost\|end> [player] [amount]` | Give a totem (admin) |
+
+## Permissions
+
+| Permission | Default | |
+|---|---|---|
+| `ultrarevive.admin` | op | Admin commands |
+| `ultrarevive.bypass` | false | That player never goes down |
+| `ultrarevive.revive` | everyone | Can revive others |
+| `ultrarevive.surrender` | everyone | Can surrender |
+
+## Configuration
+
+Everything lives in one commented `config.yml`. A few examples:
+
+```yaml
+down-duration: 60        # seconds you last while downed
+revive-duration: 5       # seconds it takes to revive
+revive-radius: 3.0
+hunger-cost: 6           # hunger it costs the reviver
+
+coop-revive:
+  enabled: true          # more revivers = faster
+
+downed-fatigue:
+  enabled: false         # going down again and again shortens your time
+
+enabled-worlds: []       # empty = every world
+```
+
+The config also covers:
+- health and effects;
+- glow and boss bar colours;
+- what a downed player can and can't do;
+- the beacon and the heartbeat;
+- every sound and every drop chance.
+
+**English and Spanish** are included. Changing `language:` translates the chat **and** the totem
+names and descriptions.
 
 ## Requirements
 
-- **Paper 26.1.2+** (Spigot won't work — this uses the Adventure API)
-- **Java 25** (required by Paper 26, not by us)
-
-No hard dependencies. LuckPerms, LPC, ItemEdit and ItemTag are optional and only add small
-conveniences.
+- **Paper 26.1.2** or newer (Spigot isn't supported)
+- **Java 25**
+- No dependencies. **LuckPerms** is optional.
 
 ## Install
 
 Drop the jar in `plugins/` and start the server. Everything is configured and working out of the
 box.
 
-Data lives in the plugin's own **`plugins/UltraRevive/`** folder. Older installs that still have
-data in the previous shared folder (`plugins/UltraView/UltraRevive/`) get it moved over
-automatically on startup. Your config is never overwritten on update.
-
-The plugin serves its own resource pack for the totem textures over HTTP (port 8081 by default).
-If the port isn't open it says so in console and disables the pack; the totems then look like
-vanilla totems and the rest works normally.
+Data lives in **`plugins/UltraRevive/`**. Older installs that still have data in the previous shared
+folder (`plugins/UltraView/UltraRevive/`) get it moved over automatically on startup. Your config
+is never overwritten on update.
 
 ---
 
