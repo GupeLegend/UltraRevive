@@ -13,14 +13,21 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /** A downed player can barely do anything: no breaking, placing, using, dropping or eating. */
 public final class RestrictionListener implements Listener {
 
     private final UltraRevive plugin;
     private final ReviveManager manager;
+    /** Last time each downed Bedrock player started sneaking, to catch a double sneak. */
+    private final Map<UUID, Long> lastSneak = new HashMap<>();
 
     public RestrictionListener(UltraRevive plugin) {
         this.plugin = plugin;
@@ -45,7 +52,9 @@ public final class RestrictionListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    // Not ignoreCancelled: Bukkit fires every RIGHT_CLICK_AIR already cancelled (there's no block to use),
+    // so with ignoreCancelled = true the self-revive by right click never ran.
+    @EventHandler(priority = EventPriority.LOW)
     public void onInteract(PlayerInteractEvent e) {
         Player p = e.getPlayer();
         if (!down(p)) {
@@ -53,15 +62,14 @@ public final class RestrictionListener implements Listener {
         }
         e.setCancelled(true);
 
-        // Exception: the Blessed Totem of the Aether (self-revive on right click).
-        if (!plugin.settings().selfItemEnabled) {
-            return;
-        }
+        // Exception: the Aether and End totems (self-revive on right click, like the chat button).
         if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
         ItemStack item = e.getItem();
-        if (item == null || !plugin.items().isSelf(item)) {
+        boolean self = plugin.settings().selfItemEnabled && plugin.items().isSelf(item);
+        boolean end = !self && plugin.settings().endItemEnabled && plugin.items().isEnd(item);
+        if (!self && !end) {
             return;
         }
 
@@ -77,7 +85,11 @@ public final class RestrictionListener implements Listener {
         if (inHand != null) {
             inHand.setAmount(inHand.getAmount() - 1);
         }
-        manager.selfRevive(d);
+        if (self) {
+            manager.selfRevive(d);
+        } else {
+            manager.endSelfRevive(d);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -91,6 +103,21 @@ public final class RestrictionListener implements Listener {
     public void onConsume(PlayerItemConsumeEvent e) {
         if (down(e.getPlayer())) {
             e.setCancelled(true);
+        }
+    }
+
+    /** Bedrock: sneaking twice in a row while downed reopens the downed menu. */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onSneak(PlayerToggleSneakEvent e) {
+        Player p = e.getPlayer();
+        if (!e.isSneaking() || !down(p) || !plugin.settings().bedrockForms || !plugin.floodgate().isBedrock(p)) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        Long last = lastSneak.put(p.getUniqueId(), now);
+        if (last != null && now - last <= 700) {
+            lastSneak.remove(p.getUniqueId());
+            manager.openBedrockForm(p);
         }
     }
 }

@@ -3,6 +3,7 @@ package mc.gupe.revive;
 import mc.gupe.revive.command.ReviveCommand;
 import mc.gupe.revive.config.Lang;
 import mc.gupe.revive.config.Settings;
+import mc.gupe.revive.integration.FloodgateHook;
 import mc.gupe.revive.integration.LuckPermsHook;
 import mc.gupe.revive.item.Items;
 import mc.gupe.revive.listener.CombatListener;
@@ -14,13 +15,22 @@ import mc.gupe.revive.migration.FolderMigration;
 import mc.gupe.revive.migration.GraveRescue;
 import mc.gupe.revive.migration.LegacyNameMigration;
 import mc.gupe.revive.model.Cooldowns;
-import mc.gupe.revive.pack.ResourcePackManager;
+import mc.gupe.revive.pack.BedrockPack;
+import mc.gupe.revive.pack.PackInstaller;
 import mc.gupe.revive.revive.ReviveManager;
 import mc.gupe.revive.stats.StatsManager;
 import mc.gupe.revive.util.PlayerHeads;
+import mc.gupe.revive.util.Tasks;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 /** UltraRevive - you don't die outright: you go DOWNED and your team can pick you back up. */
 public final class UltraRevive extends JavaPlugin {
@@ -29,17 +39,34 @@ public final class UltraRevive extends JavaPlugin {
     private Lang lang;
     private Items items;
     private ReviveManager manager;
-    private ResourcePackManager pack;
+    private String packRebuild;
     private StatsManager stats;
     private LuckPermsHook luck;
+    private FloodgateHook floodgate;
     private PlayerHeads heads;
     private final Cooldowns cooldowns = new Cooldowns();
+
+    @Override
+    public void onLoad() {
+        // Before the pack plugins and Geyser start (plugin.yml: loadbefore), so they pick up the
+        // textures on this same boot.
+        try {
+            // Only 'install' decides. Older configs still have resource-pack.enabled: false, which meant
+            // "don't send the pack yourself", not "don't install it": ignored on purpose.
+            YamlConfiguration cfg = bootConfig();
+            packRebuild = PackInstaller.install(this, cfg.getString("resource-pack.install")).rebuild();
+        } catch (IOException e) {
+            getLogger().warning("Couldn't read config.yml: " + e.getMessage());
+        }
+        BedrockPack.install(this);
+    }
 
     @Override
     public void onEnable() {
         // Must run first, before anything extracts a resource or reads the config: both bring
         // over data from older install layouts and would otherwise find the new files already
         // in place and skip themselves.
+        Tasks.init(this);
         FolderMigration.run(this);
         LegacyNameMigration.run(this);
 
@@ -56,6 +83,7 @@ public final class UltraRevive extends JavaPlugin {
         items = new Items(this);
         stats = new StatsManager(this);
         luck = new LuckPermsHook(this);
+        floodgate = new FloodgateHook(this);
         heads = new PlayerHeads(this);
         manager = new ReviveManager(this);
 
@@ -80,10 +108,17 @@ public final class UltraRevive extends JavaPlugin {
             getServer().getPluginManager().registerEvents(graveRescue, this);
         }
 
-        pack = new ResourcePackManager(this);
-        pack.start();
+        if (packRebuild != null) {
+            // The pack plugin had already started (or it's ItemsAdder, which only builds on command):
+            // once every plugin is up, ask it to rebuild with our textures.
+            String rebuild = packRebuild;
+            Tasks.global(() -> {
+                getLogger().info("Rebuilding the server resource pack: /" + rebuild);
+                getServer().dispatchCommand(getServer().getConsoleSender(), rebuild);
+            });
+            packRebuild = null;
+        }
 
-        manager.start();
         getLogger().info("UltraRevive v" + getPluginMeta().getVersion() + " enabled.");
     }
 
@@ -91,9 +126,6 @@ public final class UltraRevive extends JavaPlugin {
     public void onDisable() {
         if (manager != null) {
             manager.shutdown();
-        }
-        if (pack != null) {
-            pack.stop();
         }
         if (stats != null) {
             stats.flush();
@@ -105,6 +137,19 @@ public final class UltraRevive extends JavaPlugin {
         settings.load();
         lang.load(settings.language);
         manager.applyConfig();
+    }
+
+    /** config.yml as the server has it, with the jar's defaults underneath. Works in onLoad, before
+     *  the file even exists. Read it with the one-argument getters: the others ignore the defaults. */
+    public YamlConfiguration bootConfig() throws IOException {
+        YamlConfiguration defaults;
+        try (InputStream in = getResource("config.yml")) {
+            defaults = YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+        }
+        File f = new File(getDataFolder(), "config.yml");
+        YamlConfiguration cfg = f.isFile() ? YamlConfiguration.loadConfiguration(f) : new YamlConfiguration();
+        cfg.setDefaults(defaults);
+        return cfg;
     }
 
     /** Extracts a jar resource only if it's missing, so a normal restart never logs a warning. */
@@ -130,10 +175,6 @@ public final class UltraRevive extends JavaPlugin {
         return manager;
     }
 
-    public ResourcePackManager pack() {
-        return pack;
-    }
-
     public StatsManager stats() {
         return stats;
     }
@@ -144,6 +185,10 @@ public final class UltraRevive extends JavaPlugin {
 
     public LuckPermsHook luck() {
         return luck;
+    }
+
+    public FloodgateHook floodgate() {
+        return floodgate;
     }
 
     public PlayerHeads heads() {

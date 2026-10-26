@@ -1,5 +1,6 @@
 package mc.gupe.revive.model;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.GameMode;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
@@ -16,6 +17,8 @@ public final class Downed {
     /** Null if the boss bar is disabled. */
     public BossBar bar;
     public GameMode prevGamemode;
+    /** Their per-tick loop; cancelled when they stop being downed. */
+    public ScheduledTask task;
 
     public Downed(Player player, int ticksLeft) {
         this.player = player;

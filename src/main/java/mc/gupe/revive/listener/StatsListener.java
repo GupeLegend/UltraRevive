@@ -1,7 +1,7 @@
 package mc.gupe.revive.listener;
 
+import mc.gupe.revive.util.Tasks;
 import mc.gupe.revive.UltraRevive;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,11 +26,9 @@ public final class StatsListener implements Listener {
     public void onDeath(PlayerDeathEvent e) {
         Player victim = e.getEntity();
         Player killer = victim.getKiller(); // captured before respawn resets it
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            plugin.stats().syncFromVanilla(victim);
-            if (killer != null) {
-                plugin.stats().syncFromVanilla(killer);
-            }
-        });
+        Tasks.of(victim, () -> plugin.stats().syncFromVanilla(victim));
+        if (killer != null) {
+            Tasks.of(killer, () -> plugin.stats().syncFromVanilla(killer));
+        }
     }
 }

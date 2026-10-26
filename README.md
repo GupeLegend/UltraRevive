@@ -2,12 +2,12 @@
 
 # UltraRevive
 
-[![Minecraft](https://img.shields.io/badge/Minecraft-26.1.2-brightgreen)](https://papermc.io)
-[![Paper](https://img.shields.io/badge/Paper-26.1.2%2B-blue)](https://papermc.io)
+[![Minecraft](https://img.shields.io/badge/Minecraft-26.1%20%E2%80%93%2026.3-brightgreen)](https://papermc.io)
+[![Platforms](https://img.shields.io/badge/Paper%20%C2%B7%20Purpur%20%C2%B7%20Folia-26.1%20%E2%80%93%2026.3-blue)](https://papermc.io)
 [![Java](https://img.shields.io/badge/Java-25-orange)](https://adoptium.net)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-A Paper plugin by **Social Studio**.
+A Paper plugin by **Social Studio**, in collaboration with **[cantv@us](https://cantv.us)**.
 
 **Don't die on the first hit.** When a blow would kill you, you go down instead: prone, glowing,
 unable to fight. Your team has a few seconds to reach you and pick you back up. If nobody comes, you
@@ -99,27 +99,30 @@ tag, so a renamed vanilla totem can't be used as one of them.
 
 ## 🎨 The resource pack
 
-The totem textures come in a small resource pack, and **the plugin serves it by itself**: players
-are offered it when they join, so you don't have to host anything.
+The totem textures come in a small resource pack. UltraRevive **doesn't send packs to players**:
+on startup it puts its textures inside the plugin that already builds your server's pack, so
+players keep getting a single pack.
 
+- It works with **ResourcePackManager, Nexo, Oraxen, ItemsAdder, CraftEngine and EcoItems**. It runs
+  before they start, so the textures are in their pack on the same boot.
+- No pack plugin? The ZIP is left in `plugins/UltraRevive/resourcepack/` with a README that explains
+  how to load it, and the console says so. The free
+  [ResourcePackManager](https://modrinth.com/plugin/resourcepackmanager) is the easiest way.
 - It **only changes the three UltraRevive totems** (custom model data `130001`, `130003` and
   `130007`). A normal Totem of Undying keeps its vanilla look, and no other item, block or menu is
   touched.
 - Without the pack everything still works; the totems just look like normal totems.
+- **Bedrock** players (Geyser) get their own pack and item mapping, installed in Geyser automatically.
 
 ```yaml
 resource-pack:
-  enabled: true
-  mode: internal     # internal = the plugin serves it · url = you host it
-  port: 8081         # open this port on your host
-  url: ""            # only for mode: url
-  force: false       # true = players must accept it
+  install: auto      # auto · none · or one plugin's name, e.g. EcoItems
+  bedrock: true      # install the Bedrock pack in Geyser
 ```
 
-**Already sending your own pack?** Add the UltraRevive pack to it (or import the ZIP into your pack
-manager and rebuild), then set `resource-pack.enabled: false`. If your pack also changes the Totem
-of Undying, merge that one file by hand: keep the three entries above and leave your model as the
-fallback.
+If your server pack also changes the Totem of Undying, merge
+`assets/minecraft/items/totem_of_undying.json` by hand: keep the three entries above and leave your
+model as the fallback.
 
 ## 📊 Stats
 
@@ -182,9 +185,10 @@ names and descriptions.
 
 ## Requirements
 
-- **Paper 26.1.2** or newer (Spigot isn't supported)
+- **Paper, Purpur or Folia**, on **26.1, 26.2 or 26.3**: one jar for all of them (Spigot isn't supported).
+  On Folia the downed glow is white instead of red, because Folia has no scoreboard teams.
 - **Java 25**
-- No dependencies. **LuckPerms** is optional.
+- No dependencies. Optional: **LuckPerms** (rank in messages), **Geyser + Floodgate** (Bedrock textures and menu) and a pack plugin such as **ResourcePackManager** or **EcoItems** (totem textures).
 
 ## Install
 
@@ -223,12 +227,12 @@ src/main/java/mc/gupe/revive/
   api/                     public API and events
   command/                 /ur
   config/                  config.yml and lang/*.yml loading
-  integration/             optional LuckPerms bridge
+  integration/             optional LuckPerms and Floodgate bridges
   item/                    builds and recognises the three totems
   listener/                combat, connection, loot, restrictions, stats
   migration/               moving data from older install layouts
   model/                   downed-player state, cooldowns
-  pack/                    the resource pack's HTTP server
+  pack/                    installs the resource pack in the server's pack plugin, and in Geyser
   revive/                  the core: going down, the countdown, reviving, bleeding out
   stats/                   per-player statistics
   util/                    player-head skins for menus
@@ -236,7 +240,8 @@ src/main/java/mc/gupe/revive/
 src/main/resources/
   config.yml               every timer, health value, effect and drop chance
   lang/{en,es}.yml          all player-facing text, including item names and lore
-  resourcepack.zip          the totem textures, served by the plugin
+  resourcepack.zip          the totem textures (Java)
+  bedrock/                  the Bedrock pack for Geyser
 ```
 
 ## Internationalisation

@@ -1,5 +1,6 @@
 package mc.gupe.revive.command;
 
+import mc.gupe.revive.util.Tasks;
 import mc.gupe.revive.UltraRevive;
 import mc.gupe.revive.config.Lang;
 import mc.gupe.revive.item.Items;
@@ -12,6 +13,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.StringUtil;
 
 import java.util.ArrayList;
@@ -158,7 +160,8 @@ public final class ReviveCommand implements CommandExecutor, TabCompleter {
                 }
             }
 
-            who.getInventory().addItem(plugin.items().build(tag, amount));
+            ItemStack totems = plugin.items().build(tag, amount);
+            Tasks.of(who, () -> who.getInventory().addItem(totems));
             s.sendMessage(lang.pre("cmd-item-given", "{amount}", String.valueOf(amount), "{target}", who.getName()));
             return true;
         }
@@ -179,7 +182,8 @@ public final class ReviveCommand implements CommandExecutor, TabCompleter {
                     s.sendMessage(lang.pre("cmd-not-downed"));
                     return true;
                 }
-                plugin.manager().revive(plugin.manager().downedMap().get(target.getUniqueId()), null);
+                // On the target's own thread (on Folia they may be in another region).
+                Tasks.of(target, () -> plugin.manager().revive(plugin.manager().downedMap().get(target.getUniqueId()), null));
                 s.sendMessage(lang.pre("cmd-revived-by-admin", "{target}", target.getName()));
                 return true;
             case "down":
@@ -187,7 +191,7 @@ public final class ReviveCommand implements CommandExecutor, TabCompleter {
                     s.sendMessage(lang.pre("cmd-already-downed"));
                     return true;
                 }
-                plugin.manager().down(target);
+                Tasks.of(target, () -> plugin.manager().down(target));
                 s.sendMessage(lang.pre("cmd-downed-by-admin", "{target}", target.getName()));
                 return true;
             case "finish":
@@ -196,7 +200,7 @@ public final class ReviveCommand implements CommandExecutor, TabCompleter {
                     s.sendMessage(lang.pre("cmd-not-downed"));
                     return true;
                 }
-                plugin.manager().bleedOut(plugin.manager().downedMap().get(target.getUniqueId()));
+                Tasks.of(target, () -> plugin.manager().bleedOut(plugin.manager().downedMap().get(target.getUniqueId())));
                 s.sendMessage(lang.pre("cmd-finished-by-admin", "{target}", target.getName()));
                 return true;
             default:

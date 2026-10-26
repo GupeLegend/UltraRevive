@@ -35,6 +35,14 @@ selfrevive-button: "&6&l[Self-Revive]"
 selfrevive-hover: "&7Spend a Blessed Totem of the Aether to get back up alone."
 selfrevive-no-item: "&cYou don't have a &6Blessed Totem of the Aether &cto self-revive."
 
+# Menu for Bedrock (consoles): replaces the chat buttons
+bedrock-form-title: "&c&lYOU ARE DOWNED"
+bedrock-form-content: "&7Wait for a teammate to crouch next to you and pick you up, or choose what to do."
+bedrock-form-wait: "&2Wait for rescue"
+bedrock-form-surrender: "&4Give Up"
+bedrock-form-selfrevive: "&6Self-Revive (totem)"
+bedrock-form-hint: "&7Sneak &etwice &7to open the downed menu."
+
 broadcast-downed: "&c☠ &e{player} &cwas downed. A teammate can revive them!"
 broadcast-revived: "&a✔ &e{player} &awas revived."
 broadcast-self-revived: "&6✦ &e{player} &6got back up on their own."
@@ -108,4 +116,3 @@ item-end-lore:
   - ""
   - "&8» Self-revive (downed) or carry it when reviving someone"
 
-pack-prompt: "&6UltraRevive &7- accept the pack to see the totems"

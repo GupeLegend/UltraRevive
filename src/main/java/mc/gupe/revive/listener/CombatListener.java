@@ -1,5 +1,6 @@
 package mc.gupe.revive.listener;
 
+import mc.gupe.revive.util.Tasks;
 import mc.gupe.revive.UltraRevive;
 import mc.gupe.revive.config.Settings;
 import mc.gupe.revive.item.Items;
@@ -101,7 +102,7 @@ public final class CombatListener implements Listener {
                     && plugin.items().hasInInventory(p, Items.BOOST)) {
                 e.setCancelled(true);
                 plugin.lang().chat(p, "nether-curse-death");
-                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                Tasks.of(p, () -> {
                     if (p.isOnline() && !p.isDead()) {
                         p.setHealth(0.0);
                     }

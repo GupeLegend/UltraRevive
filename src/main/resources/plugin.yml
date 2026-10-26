@@ -1,13 +1,16 @@
 name: UltraRevive
 version: '1.0'
 main: mc.gupe.revive.UltraRevive
-api-version: '26.1.2'
+api-version: '26.1'
 author: Social Studio
 description: Don't die outright - go DOWNED and let your team pick you back up. With three hard-to-get totems of its own that change the rescue's rules.
-website: https://modrinth.com/plugin/ultrarevive
-folia-supported: false
-# All OPTIONAL. LuckPerms is only used to show the player's rank.
-softdepend: [LuckPerms, LPC, ItemEdit, ItemTag]
+website: https://gupe.dev/en/wiki/ultrarevive/
+folia-supported: true
+# All OPTIONAL. LuckPerms is only used to show the player's rank; floodgate for the Bedrock menu.
+softdepend: [LuckPerms, LPC, ItemEdit, ItemTag, floodgate]
+# Loads before the plugins that build the server's resource pack, and before Geyser, so the textures
+# it installs in them are read on the same boot.
+loadbefore: [ResourcePackManager, Nexo, Oraxen, ItemsAdder, CraftEngine, EcoItems, Geyser-Spigot]
 
 commands:
   ultrarevive:

@@ -35,6 +35,14 @@ selfrevive-button: "&6&l[Auto-Revivir]"
 selfrevive-hover: "&7Gasta un Tótem Bendito del Aether para levantarte solo."
 selfrevive-no-item: "&cNo tienes un &6Tótem Bendito del Aether &cpara auto-revivirte."
 
+# Menú para Bedrock (consolas): reemplaza los botones del chat
+bedrock-form-title: "&c&lESTÁS DERRIBADO"
+bedrock-form-content: "&7Espera a que un compañero se agache a tu lado para levantarte, o elige qué hacer."
+bedrock-form-wait: "&2Esperar rescate"
+bedrock-form-surrender: "&4Rendirse"
+bedrock-form-selfrevive: "&6Auto-Revivir (tótem)"
+bedrock-form-hint: "&7Agáchate &e2 veces &7para abrir el menú de derribado."
+
 broadcast-downed: "&c☠ &e{player} &cha sido derribado. ¡Un aliado puede revivirlo!"
 broadcast-revived: "&a✔ &e{player} &afue revivido."
 broadcast-self-revived: "&6✦ &e{player} &6se levanto por su cuenta."
@@ -108,4 +116,3 @@ item-end-lore:
   - ""
   - "&8» Auto-revivir (derribado) o tenerlo en el inventario al revivir"
 
-pack-prompt: "&6UltraRevive &7- acepta el pack para ver los tótems"

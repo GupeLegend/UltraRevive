@@ -1,5 +1,6 @@
 package mc.gupe.revive.migration;
 
+import mc.gupe.revive.util.Tasks;
 import mc.gupe.revive.UltraRevive;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -162,7 +163,7 @@ public final class GraveRescue implements Listener {
         save();
 
         // One tick later: the inventory is still being assembled right as a player joins.
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        Tasks.of(p, 20, () -> {
             if (!p.isOnline()) {
                 return;
             }
@@ -191,7 +192,7 @@ public final class GraveRescue implements Listener {
                 file.delete();
                 plugin.getLogger().info("Grave rescue: everyone has been paid back. Nothing left to do.");
             }
-        }, 20L);
+        });
     }
 
     @SuppressWarnings("unchecked")

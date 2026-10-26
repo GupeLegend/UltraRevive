@@ -31,11 +31,11 @@ public final class PlayerHeads {
 
     /** Preloads (async) the offline profiles that are missing, then runs {@code then} on the main thread. */
     public void preload(Collection<UUID> ids, Runnable then) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Tasks.async(() -> {
             for (UUID id : ids) {
                 fetch(id);
             }
-            Bukkit.getScheduler().runTask(plugin, then);
+            Tasks.global(then);
         });
     }
 
@@ -98,7 +98,7 @@ public final class PlayerHeads {
         if (missing.isEmpty()) {
             return;
         }
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Tasks.async(() -> {
             for (UUID id : missing) {
                 fetch(id);
             }
@@ -110,7 +110,7 @@ public final class PlayerHeads {
         if (!requested.add(id)) {
             return;
         }
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> fetch(id));
+        Tasks.async(() -> fetch(id));
     }
 
     /** Fetches and caches the profile. Always runs off the main thread. */

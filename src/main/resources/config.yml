@@ -74,23 +74,28 @@ broadcast-radius: 30
 sound-downed: ENTITY_PLAYER_HURT
 sound-revived: ENTITY_PLAYER_LEVELUP
 sound-bled-out: ENTITY_WITHER_DEATH
-sound-surrender: ENTITY_TOTEM_USE
+sound-surrender: ITEM_TOTEM_USE
 surrender-particles: true
 surrender-cooldown: 0
 
+# Bedrock players (Floodgate) get a menu with big buttons instead of the chat buttons, since on
+# console they can't click chat. Sneaking twice while downed opens it again.
+bedrock-forms: true
+
 stats: true
 
-# --- Resource pack ---
-# internal = lo sirve el plugin y necesita el puerto abierto. url = lo servis vos.
+# --- Resource pack (las texturas de los totems) ---
+# UltraRevive no les manda packs a los jugadores: al arrancar mete sus texturas dentro del plugin que
+# arma el pack del servidor, antes de que ese plugin arranque, asi los jugadores reciben un solo pack.
+#   auto = el primero que este instalado de: ResourcePackManager, Nexo, Oraxen, ItemsAdder, CraftEngine, EcoItems
+#   el nombre de un plugin (por ejemplo EcoItems) = solo ese
+#   none = no hace nada
+# Si no hay ninguno, el pack queda en plugins/UltraRevive/resourcepack/ con un README.
 resource-pack:
-  enabled: true
-  mode: internal
-  host: "AUTO"
-  port: 8081
-  url: ""
-  force: false
-  # Vacio = usa el texto del idioma. Escribi algo aca solo si querés el tuyo propio.
-  prompt: ""
+  install: auto
+  # Bedrock (Geyser): si Geyser esta en este servidor, el plugin le instala solo un pack de Bedrock y el
+  # mapeo de los totems, para que en consola y celular se vean igual que en Java. Sin Geyser no hace nada.
+  bedrock: true
 
 # --- Los tres totems ---
 # Todos son TOTEM_OF_UNDYING distinguidos por custom-model-data, asi que los totems normales

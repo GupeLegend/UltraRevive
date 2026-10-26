@@ -2,7 +2,9 @@ package mc.gupe.revive.config;
 
 import mc.gupe.revive.UltraRevive;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
+import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarColor;
 import org.bukkit.configuration.ConfigurationSection;
@@ -56,6 +58,7 @@ public final class Settings {
     public Sound soundSurrender;
     public boolean surrenderParticles;
     public int surrenderCooldownSecs;
+    public boolean bedrockForms;
 
     public boolean statsEnabled;
     public boolean removeExternalOwnerHeads;
@@ -191,9 +194,10 @@ public final class Settings {
         soundDowned = parseSound(c.getString("sound-downed", "ENTITY_PLAYER_HURT"));
         soundRevived = parseSound(c.getString("sound-revived", "ENTITY_PLAYER_LEVELUP"));
         soundBledOut = parseSound(c.getString("sound-bled-out", "ENTITY_WITHER_DEATH"));
-        soundSurrender = parseSound(c.getString("sound-surrender", "ENTITY_TOTEM_USE"));
+        soundSurrender = parseSound(c.getString("sound-surrender", "ITEM_TOTEM_USE"));
         surrenderParticles = c.getBoolean("surrender-particles", true);
         surrenderCooldownSecs = Math.max(0, c.getInt("surrender-cooldown", 0));
+        bedrockForms = c.getBoolean("bedrock-forms", true);
 
         statsEnabled = c.getBoolean("stats", true);
         removeExternalOwnerHeads = c.getBoolean("remove-external-heads", true);
@@ -341,13 +345,29 @@ public final class Settings {
         }
     }
 
+    // Accepts the Bukkit name (ITEM_TOTEM_USE) or the game key (item.totem.use / minecraft:item.totem.use).
+    // Sound.valueOf is marked for removal in 26.3, so names are looked up in the sound registry.
+    // ENTITY_TOTEM_USE never existed in Bukkit; 26.1.2 configs used it, so it maps to the totem sound.
     private Sound parseSound(String s) {
-        try {
-            return Sound.valueOf(s.toUpperCase(Locale.ROOT));
-        } catch (Exception e) {
-            plugin.getLogger().warning("Invalid sound: " + s);
-            return null;
+        if (s == null || s.isBlank()) return null;
+        String name = s.trim();
+        if (name.equalsIgnoreCase("ENTITY_TOTEM_USE")) name = "ITEM_TOTEM_USE";
+        Sound sound = null;
+        if (name.contains(".") || name.contains(":")) {
+            NamespacedKey nk = NamespacedKey.fromString(name.toLowerCase(Locale.ROOT));
+            sound = nk == null ? null : Registry.SOUNDS.get(nk);
+        } else {
+            String wanted = name.toUpperCase(Locale.ROOT);
+            for (Sound candidate : Registry.SOUNDS) {
+                NamespacedKey nk = Registry.SOUNDS.getKey(candidate);
+                if (nk != null && nk.getKey().replace('.', '_').toUpperCase(Locale.ROOT).equals(wanted)) {
+                    sound = candidate;
+                    break;
+                }
+            }
         }
+        if (sound == null) plugin.getLogger().warning("Invalid sound: " + s);
+        return sound;
     }
 
     private Particle parseParticle(String s) {

@@ -1,5 +1,6 @@
 package mc.gupe.revive.integration;
 
+import mc.gupe.revive.util.Tasks;
 import mc.gupe.revive.UltraRevive;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
@@ -48,7 +49,7 @@ public final class LuckPermsHook {
                 return;
             }
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                    .whenComplete((v, e) -> Bukkit.getScheduler().runTask(plugin, then));
+                    .whenComplete((v, e) -> Tasks.global(then));
         } catch (Throwable t) {
             then.run();
         }

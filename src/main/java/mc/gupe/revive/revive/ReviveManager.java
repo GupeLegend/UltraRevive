@@ -8,6 +8,7 @@ import mc.gupe.revive.config.Lang;
 import mc.gupe.revive.config.Settings;
 import mc.gupe.revive.item.Items;
 import mc.gupe.revive.model.Downed;
+import mc.gupe.revive.util.Tasks;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -18,27 +19,29 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Pose;
 import org.bukkit.event.Event;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Core of the plugin: downed players, the per-tick loop, reviving and bleeding out. */
+/**
+ * Core of the plugin: downed players, their per-tick loop, reviving and bleeding out.
+ *
+ * <p>Each downed player ticks on their own entity scheduler (see {@link Tasks}), so on Folia it runs
+ * on the thread of the region they're in, and the revivers are the players next to them. That's why
+ * the shared maps are concurrent.
+ */
 public final class ReviveManager {
 
     private static final String TEAM = "ultra_downed";
@@ -47,16 +50,16 @@ public final class ReviveManager {
     private final Settings cfg;
     private final Lang lang;
 
-    private final Map<UUID, Downed> downedMap = new HashMap<>();
-    /** Who is reviving whom right now (reviver -> downed). Rebuilt every tick. */
-    private final Map<UUID, UUID> revivingNow = new HashMap<>();
-    private final Map<UUID, Long> lastDownAt = new HashMap<>();
-    private final Map<UUID, Integer> fatigueStacks = new HashMap<>();
+    private final Map<UUID, Downed> downedMap = new ConcurrentHashMap<>();
+    /** Who is reviving whom right now (reviver -> downed). Each downed player rebuilds theirs every tick. */
+    private final Map<UUID, UUID> revivingNow = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> lastDownAt = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> fatigueStacks = new ConcurrentHashMap<>();
     /** Players already warned about, so the watchdog only logs once per occurrence. */
-    private final Set<UUID> watchdogWarned = new HashSet<>();
+    private final Set<UUID> watchdogWarned = ConcurrentHashMap.newKeySet();
     /** Players whose death is already scheduled for next tick. */
     private final Set<UUID> dying = ConcurrentHashMap.newKeySet();
-    private BukkitTask task;
+    private boolean teams = true;
 
     public ReviveManager(UltraRevive plugin) {
         this.plugin = plugin;
@@ -67,22 +70,39 @@ public final class ReviveManager {
 
     /** Creates (or reuses) the scoreboard team that gives the glow its color. */
     private void setupTeam() {
-        Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
-        Team team = board.getTeam(TEAM);
-        if (team == null) {
-            team = board.registerNewTeam(TEAM);
+        Scoreboard board = mainScoreboard();
+        if (board == null) {
+            return;
         }
-        team.setColor(cfg.glowColor);
-        team.setCanSeeFriendlyInvisibles(false);
+        try {
+            Team team = board.getTeam(TEAM);
+            if (team == null) {
+                team = board.registerNewTeam(TEAM);
+            }
+            team.setColor(cfg.glowColor);
+            team.setCanSeeFriendlyInvisibles(false);
+        } catch (UnsupportedOperationException e) {
+            teams = false;  // Folia has no scoreboard teams
+        }
+    }
+
+    /** The glow-color team, or null on servers without scoreboard teams (Folia): the glow is then white. */
+    private Team glowTeam() {
+        Scoreboard board = teams ? mainScoreboard() : null;
+        return board == null ? null : board.getTeam(TEAM);
+    }
+
+    private static Scoreboard mainScoreboard() {
+        try {
+            return Bukkit.getScoreboardManager().getMainScoreboard();
+        } catch (UnsupportedOperationException | NullPointerException e) {
+            return null;
+        }
     }
 
     /** Re-applies settings that can change on /ur reload (e.g. the glow color). */
     public void applyConfig() {
         setupTeam();
-    }
-
-    public void start() {
-        task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 1L, 1L);
     }
 
     public boolean isDowned(UUID id) {
@@ -111,6 +131,7 @@ public final class ReviveManager {
 
         Downed d = new Downed(p, downDur);
         downedMap.put(p.getUniqueId(), d);
+        d.task = Tasks.timer(p, 1, 1, t -> tick(d));
 
         p.setHealth(Math.min(cfg.downedHealth, p.getMaxHealth()));
         p.setFoodLevel(Math.max(p.getFoodLevel(), 6));
@@ -122,14 +143,14 @@ public final class ReviveManager {
         // Also one tick later: switching game mode resets the client-side pose, and since we set
         // it with fixed=true the server still reports SWIMMING, so the next tick's check never
         // notices the client is standing again.
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+        Tasks.of(p, 1, () -> {
             if (isDowned(p.getUniqueId())) {
                 applyDownPose(p);
             }
-        }, 1L);
+        });
 
         if (cfg.glow) {
-            Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(TEAM);
+            Team team = glowTeam();
             if (team != null) {
                 team.addEntry(p.getName());
             }
@@ -177,8 +198,14 @@ public final class ReviveManager {
         fire(new PlayerRevivedEvent(p, reviver, cause));
     }
 
-    /** Clickable chat prompts: surrender and (if enabled) self-revive. */
+    /** Clickable chat prompts: surrender and (if enabled) self-revive. Bedrock gets a form instead. */
     private void sendDownedPrompts(Player p) {
+        if (cfg.bedrockForms && plugin.floodgate().isBedrock(p)) {
+            p.sendMessage(lang.pre("bedrock-form-hint"));
+            // a bit later, so the downed title is seen before the form covers the screen
+            Tasks.of(p, 30, () -> openBedrockForm(p));
+            return;
+        }
         Component surrenderPrompt = legacy(lang.get("surrender-prompt"));
         Component surrenderButton = legacy(lang.get("surrender-button"))
                 .clickEvent(ClickEvent.runCommand("/ultrarevive surrender"))
@@ -191,6 +218,13 @@ public final class ReviveManager {
                     .clickEvent(ClickEvent.runCommand("/ultrarevive selfrevive"))
                     .hoverEvent(HoverEvent.showText(legacy(lang.get("selfrevive-hover"))));
             p.sendMessage(revivePrompt.append(reviveButton));
+        }
+    }
+
+    /** Opens (or reopens, on a double sneak) the downed menu of a Bedrock player. */
+    public void openBedrockForm(Player p) {
+        if (p.isOnline() && isDowned(p.getUniqueId())) {
+            plugin.floodgate().sendDownedForm(p, cfg.selfItemEnabled || cfg.endItemEnabled);
         }
     }
 
@@ -281,14 +315,10 @@ public final class ReviveManager {
 
         int period = 12;
         int totalTicks = Math.max(period, cfg.endAreaHealTicks);
-        BukkitTask[] holder = new BukkitTask[1];
         int[] elapsed = {0};
-        holder[0] = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+        Tasks.timer(loc, 1, period, task -> {
             renderHealZone(w, loc, r);
-            for (Player near : w.getPlayers()) {
-                if (near.getLocation().distanceSquared(loc) > r * r) {
-                    continue;
-                }
+            for (Player near : loc.getNearbyPlayers(r)) {
                 if (cfg.endAreaTeamOnly && !near.getUniqueId().equals(centerId)
                         && !teamOrAlly(centerId, near.getUniqueId())) {
                     continue;
@@ -301,10 +331,10 @@ public final class ReviveManager {
                 }
             }
             elapsed[0] += period;
-            if (elapsed[0] >= totalTicks && holder[0] != null) {
-                holder[0].cancel();
+            if (elapsed[0] >= totalTicks) {
+                task.cancel();
             }
-        }, 0L, period);
+        });
     }
 
     /** Filled particle disc on the ground that marks the healing area. */
@@ -397,7 +427,7 @@ public final class ReviveManager {
         }
 
         if (dest != null) {
-            p.teleport(dest);
+            p.teleportAsync(dest);
             try {
                 p.getWorld().spawnParticle(Particle.PORTAL, dest.clone().add(0, 1, 0), 60, 0.4, 0.7, 0.4, 0.6);
                 if (cfg.endSound != null) {
@@ -419,23 +449,17 @@ public final class ReviveManager {
         fireRevived(p, null, PlayerRevivedEvent.Cause.SELF_REVIVED);
     }
 
-    /** Watchdog: warns if someone stayed downed far longer than they should have. */
-    private void watchdog() {
-        for (Downed d : new ArrayList<>(downedMap.values())) {
-            if (d.ticksLeft > -d.totalTicks) {
-                continue;
-            }
-            if (!watchdogWarned.add(d.player.getUniqueId())) {
-                continue;
-            }
-            plugin.getLogger().warning(d.player.getName() + " has been downed for more than twice "
-                    + "their allotted time (" + d.totalTicks + " ticks). Something got them stuck; "
-                    + "forcing a bleed-out. Check whether another plugin is cancelling their death.");
-            bleedOut(d);
+    /** Watchdog: warns if someone stayed downed far longer than they should have. Returns true if it bled them out. */
+    private boolean watchdog(Downed d) {
+        if (d.ticksLeft > -d.totalTicks || !watchdogWarned.add(d.player.getUniqueId())) {
+            return false;
         }
-        if (downedMap.isEmpty()) {
-            watchdogWarned.clear();
-        }
+        plugin.getLogger().warning(d.player.getName() + " has been downed for more than twice "
+                + "their allotted time (" + d.totalTicks + " ticks). Something got them stuck; "
+                + "forcing a bleed-out. Check whether another plugin is cancelling their death.");
+        bleedOut(d);
+        watchdogWarned.remove(d.player.getUniqueId());
+        return true;
     }
 
     public void bleedOut(Downed d) {
@@ -464,7 +488,7 @@ public final class ReviveManager {
         // pipeline sees the player dead and runs its own death on top, with the inventory already
         // empty. Deferring by one tick avoids that double death.
         dying.add(p.getUniqueId());
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
+        Tasks.of(p, () -> {
             dying.remove(p.getUniqueId());
             if (p.isOnline() && !p.isDead() && p.getHealth() > 0) {
                 p.setHealth(0.0);
@@ -495,6 +519,10 @@ public final class ReviveManager {
     public void cleanup(Downed d) {
         Player p = d.player;
         downedMap.remove(p.getUniqueId());
+        if (d.task != null) {
+            d.task.cancel();
+        }
+        revivingNow.values().removeIf(target -> target.equals(p.getUniqueId()));
         UltraReviveAPI.markDowned(plugin, p, false);
         if (d.bar != null) {
             d.bar.removeAll();
@@ -514,7 +542,7 @@ public final class ReviveManager {
             p.setGameMode(d.prevGamemode);
         }
         p.setGlowing(false);
-        Team team = Bukkit.getScoreboardManager().getMainScoreboard().getTeam(TEAM);
+        Team team = glowTeam();
         if (team != null) {
             team.removeEntry(p.getName());
         }
@@ -524,9 +552,6 @@ public final class ReviveManager {
 
     /** On /ur reload or disable: revives/clears everyone so nobody stays stuck downed. */
     public void shutdown() {
-        if (task != null) {
-            task.cancel();
-        }
         for (Downed d : new ArrayList<>(downedMap.values())) {
             cleanup(d);
             if (d.player.isOnline()) {
@@ -549,32 +574,35 @@ public final class ReviveManager {
         });
     }
 
-    private void tick() {
-        if (downedMap.isEmpty()) {
-            if (!revivingNow.isEmpty()) {
-                revivingNow.clear();
+    /** One tick of one downed player, on their own thread. */
+    private void tick(Downed d) {
+        Player p = d.player;
+        if (downedMap.get(p.getUniqueId()) != d) {
+            if (d.task != null) {
+                d.task.cancel();
             }
             return;
         }
-        watchdog();
-        revivingNow.clear();
-        for (Downed d : new ArrayList<>(downedMap.values())) {
-            Player p = d.player;
-            if (!p.isOnline() || p.isDead()) {
-                cleanup(d);
-                continue;
-            }
+        if (!p.isOnline() || p.isDead()) {
+            cleanup(d);
+            return;
+        }
+        if (watchdog(d)) {
+            return;
+        }
+        revivingNow.values().removeIf(target -> target.equals(p.getUniqueId()));
+        {
 
             // A downed player who falls into the void should still die, not float invulnerable.
             if (p.getLocation().getY() < p.getWorld().getMinHeight() - 5) {
                 bleedOut(d);
-                continue;
+                return;
             }
 
             d.ticksLeft--;
             if (d.ticksLeft <= 0) {
                 bleedOut(d);
-                continue;
+                return;
             }
 
             // Re-sent every second regardless of getPose(): with fixed=true the server always
@@ -761,10 +789,8 @@ public final class ReviveManager {
         if (cfg.broadcastRadius <= 0) {
             Bukkit.broadcastMessage(msg);
         } else {
-            for (Player near : p.getWorld().getPlayers()) {
-                if (near.getLocation().distance(p.getLocation()) <= cfg.broadcastRadius) {
-                    near.sendMessage(msg);
-                }
+            for (Player near : p.getLocation().getNearbyPlayers(cfg.broadcastRadius)) {
+                near.sendMessage(msg);
             }
         }
     }
